@@ -165,235 +165,79 @@ class Search:
 
 
 
-    def get_links(self, s, i, driver, typ) -> list: #alles in 1 array
+    def get_links(self, i, driver, typ) -> list: #alles in 1 array
+        
+        driver.get(f"https://www.immowelt.de")
+        def button():
+            try:
+                driver.execute_script('document.querySelector("#usercentrics-root").shadowRoot.querySelector("#uc-center-container > div.sc-jJoQJp.iTLtpk > div > div > div > button.sc-gsDKAQ.fILFKg").click()')
 
-        if s == "www.engelvoelkers.com":
-            driver.get("https://www.engelvoelkers.com")
-            driver.find_element("xpath", "//*[@id=\"ev-dialog-cookieConsentDialog\"]/div/div/div[3]/button[2]").click()
-            driver.find_element("xpath", "/html/body/div[3]/header/div[5]/div[3]/div[4]/div").click()
-            time.sleep(2)
-            stadt_elem = driver.find_element("xpath", "//*[@id=\"ev-advanced-search-dialog-location-suggest\"]")
-            stadt_elem.send_keys(self.props["stadt"])
-            stadt_elem.send_keys(Keys.RETURN)
-            if self.props["miete"] == 1:
-                driver.find_element("xpath", "//*[@id=\"ev-advanced-search-dialog-main\"]/div[5]/div[6]/div/ul/li[3]/span").click()
-            if typ == 0: #wohnung
-                driver.find_element("xpath", "//*[@id=\"ev-advanced-search-dialog-main\"]/div[5]/div[8]/div/ul/li[5]/span").click()
-            if typ == 1: #haus
-                driver.find_element("xpath", "//*[@id=\"ev-advanced-search-dialog-main\"]/div[5]/div[8]/div/ul/li[3]/span").click()
-            if typ == 2: #grundstück
-                driver.find_element("xpath", "//*[@id=\"ev-advanced-search-dialog-main\"]/div[5]/div[8]/div/ul/li[2]/span").click()
-            if typ == 3:
-                return ""
-            time.sleep(1)
-            driver.find_element("xpath", "/html/body/div[3]/header/div[7]/div[5]").click() #search
-            time.sleep(3)
-            page_number = 1
-            def get_pages():
-                try:
-                    driver.find_element("xpath", "/html/body/div[12]/div")
-                except BaseException:
-                    return 1
-                else:
-                    wrapper = driver.find_element("xpath", "/html/body/div[12]/div/ul")
-                    return int(wrapper.find_elements("tag name", "li")[-2].get_attribute("innerHTML"))
-            def decode_urls():
-                wrapper = driver.find_element(By.CLASS_NAME, "ev-search-results")
-                boxes = wrapper.find_elements(By.TAG_NAME, "div")
-                for i in boxes:
-                    try:
-                        res = i.find_element(By.TAG_NAME, "a").get_attribute("href")
-                    except BaseException:
-                        pass
-                    else:
-                        print(res)
-                        return res
-
-
-            n_pages = get_pages()
-            while (page_number <= n_pages): #loop through sites
-                self.links_arr.append(decode_urls())
-                if page_number != n_pages:
-                    driver.find_element("xpath", "/html/body/div[12]/div/ul/li[6]/a").click() #next page
-
-            return self.links_arr
-
-        if s == "www.immobilienscout24.de":
-            print("working on implementing ")
-
-        if s == "www.immowelt.de":
-            driver.get(f"https://{s}")
-            def button():
-                try:
-                    driver.execute_script('document.querySelector("#usercentrics-root").shadowRoot.querySelector("#uc-center-container > div.sc-jJoQJp.iTLtpk > div > div > div > button.sc-gsDKAQ.fILFKg").click()')
-
-                except JavascriptException:
-                    button()
-            if i==0:
+            except JavascriptException:
                 button()
-            if self.props["mieten"]==1:
-                if typ == 0: #Wohnung mieten
-                    pass
-                elif typ == 1: # Haus mieten
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[1]/ul/li[2]/label/input").click()
-                elif typ == 2: # Grundstück mieten
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[1]/ul/li[7]/label/input").click()
-                elif typ == 3: # Garage mieten
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[1]/ul/li[6]/label/input").click()
+        if i==0:
+            button()
+        if self.props["mieten"]==1:
+            if typ == 0: #Wohnung mieten
+                pass
+            elif typ == 1: # Haus mieten
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[1]/ul/li[2]/label/input").click()
+            elif typ == 2: # Grundstück mieten
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[1]/ul/li[7]/label/input").click()
+            elif typ == 3: # Garage mieten
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[1]/ul/li[6]/label/input").click()
+        else:
+            if typ==0:
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[2]/label/input").click()
+            elif typ==1:
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[1]/label/input").click()
+            elif typ==2:
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[5]/label/input").click()
+            elif typ==3:
+                driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[7]/label/input").click()
+
+        driver.find_element(By.XPATH, "//*[@id=\"tbLocationInput\"]").send_keys(Search.decode_bundesland(i)) #location
+        driver.find_element(By.TAG_NAME, "body").send_keys(Keys.RETURN)
+        # driver.find_element(By.XPATH, "//*[@id=\"btnSearchSubmit\"]").click() #search # maybe return enough?
+
+        def get_pages():
+            try:
+                wrapper = driver.find_element(By.CLASS_NAME, "Pagination-190de")
+            except NoSuchFrameException:
+                return get_pages()
             else:
-                if typ==0:
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[2]/label/input").click()
-                elif typ==1:
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[1]/label/input").click()
-                elif typ==2:
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[5]/label/input").click()
-                elif typ==3:
-                    driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[7]/label/input").click()
-
-            driver.find_element(By.XPATH, "//*[@id=\"tbLocationInput\"]").send_keys(Search.decode_bundesland(i)) #location
-            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.RETURN)
-            # driver.find_element(By.XPATH, "//*[@id=\"btnSearchSubmit\"]").click() #search # maybe return enough?
-
-            def get_pages():
                 try:
-                    wrapper = driver.find_element(By.CLASS_NAME, "Pagination-190de")
-                except NoSuchFrameException:
-                    return get_pages()
+                    wrapper.find_element(By.CLASS_NAME, "arrowButton-20ae5")
+                except NoSuchElementException:
+                    return wrapper.find_elements(By.TAG_NAME, "button")[-1].find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
                 else:
-                    try:
-                        wrapper.find_element(By.CLASS_NAME, "arrowButton-20ae5")
-                    except NoSuchElementException:
-                        return wrapper.find_elements(By.TAG_NAME, "button")[-1].find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
-                    else:
-                        return wrapper.find_elements(By.TAG_NAME, "button")[-2].find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
+                    return wrapper.find_elements(By.TAG_NAME, "button")[-2].find_element(By.TAG_NAME, "span").get_attribute("innerHTML")
 
-            def decode_urls():
+        def decode_urls():
+            try:
+                return Decoder.decode_searchpage_immowelt(driver.page_source)
+            except AttributeError:
+                driver.refresh()
                 try:
                     return Decoder.decode_searchpage_immowelt(driver.page_source)
                 except AttributeError:
-                    driver.refresh()
-                    try:
-                        return Decoder.decode_searchpage_immowelt(driver.page_source)
-                    except AttributeError:
-                        print("empty page!!!!")
-                        return []
+                    print("empty page!!!!")
+                    return []
 
 
-            page_number = 1
-            n_pages = int(get_pages())
-            base_url = driver.current_url
-            while page_number <= n_pages:
-                for i in decode_urls():
-                    self.links_arr.append(i)
-                driver.get(f"{base_url}&sp={page_number}")
-                time.sleep(2)
-                #driver.get("https://www.google.com")
+        page_number = 1
+        n_pages = int(get_pages())
+        base_url = driver.current_url
+        while page_number <= n_pages:
+            for i in decode_urls():
+                self.links_arr.append(i)
+            driver.get(f"{base_url}&sp={page_number}")
+            time.sleep(2)
+            #driver.get("https://www.google.com")
 
-                page_number += 1
+            page_number += 1
 
-            return self.links_arr
+        return self.links_arr
 
-        if s == "www.immonet.de":
-            driver.get(f"https://{s}")
-            driver.execute_script('document.querySelector("#usercentrics-root").shadowRoot.querySelector("#uc-center-container > div.sc-ikJyIC.gpszuz > div > div > div > button.sc-gsDKAQ.fILFKg").click()')
-            if self.props["mieten"] == 1:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-marketingtype-rent\"]").click()
-            if self.props["mieten"] ==2:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-marketingtype-buy\"]").click()
-            if self.props["typ"] == 0:
-                driver.find_element("xpath", "//*[@id=\"estate-type\"]/option[1]").click()
-            if self.props["typ"] == 1:
-                driver.find_element("xpath", "//*[@id=\"estate-type\"]/option[2]").click()
-            if self.props["typ"] == 2:
-                driver.find_element("xpath", "//*[@id=\"estate-type\"]/option[8]").click()
-            if self.props["typ"] == 3:
-                driver.find_element("xpath", "//*[@id=\"estate-type\"]/option[4]").click()
-            if self.props["preis"][1] != 0:
-                driver.find_element("xpath", "//*[@id=\"price_to\"]").send_keys(self.props["preis"][1])
-            if self.props["qm"][0] != 0:
-                driver.find_element("xpath", "//*[@id=\"area_from\"]").send_keys(self.props["qm"][0])
-            if self.props["zimmer"][0] == 1 and self.props["zimmer"][1] == 1: #zimmer
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-rooms-1\"]").click()
-            if self.props["zimmer"][0] == 2:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-rooms-2\"]").click()
-            if self.props["zimmer"][0] == 3:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-rooms-3\"]").click()
-            if self.props["zimmer"][0] == 4:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-rooms-4\"]").click()
-            if self.props["zimmer"][0] == 5:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-rooms-5\"]").click()
-            if self.props["zimmer"][0] >= 6:
-                driver.find_element("xpath", "//*[@id=\"btn-insearch-rooms-5\"]").click()
-
-            driver.find_element("xpath", "//*[@id=\"btn-int-find-immoobjects\"]").click()
-
-        if s == "www.immobilo.de":
-            driver.get("https://www.immobilo.de")
-            driver.find_element("xpath", "//*[@id=\"consentDialog\"]/div[2]/div[2]/div/div[2]/div/div[1]/div").click()
-            if self.props["mieten"]==2:
-                driver.find_element("xpath", "/html/body/div[1]/div[4]/div/div[3]/div[2]/div[2]/div/div[1]/div/form/div[1]/div/div[2]").click()
-            if self.props["plz"] != 0:
-                driver.find_element("xpath", "//*[@id=\"l\"]").send_keys(self.props["plz"])
-            else:
-                temp = self.props["stadt"]
-                temp2 = self.props["stadtteil"]
-                driver.find_element("xpath", "//*[@id=\"l\"]").send_keys(f"{temp} {temp2}")
-                driver.find_element("xpath", "/html/body").send_keys(Keys.RETURN)
-            driver.find_element("xpath", "/html/body/div[1]/div[3]/div/div[3]/div[2]/div[2]/div[1]/div[1]/div/button").click()
-            driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[1]/div[2]/div/div[2]/span").click()
-            ###Type-select
-            if self.props["mieten"] == 1:
-                if typ == 0:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[1]/option[2]")
-                if typ == 1:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[1]/option[4]")
-                if typ == 2:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[1]/option[5]")
-                if typ == 3:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[1]/option[7]")
-            else:
-                if typ == 0:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[2]/option[2]")
-                if typ == 1:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[2]/option[3]")
-                if typ == 2:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[2]/option[4]")
-                if typ == 3:
-                    driver.find_element("xpath", "//*[@id=\"t\"]/optgroup[2]/option[6]")
-            driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[1]/div[2]/div/div[2]/div/div[2]/button").click()
-            ###Preis
-            driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[2]/div[1]/div/span").click()
-            if self.props["preis"][1] != 0:
-                driver.find_element("xpath", "//*[@id=\"pf\"]").send_keys(self.props["preis"][0])
-            if self.props["preis"][1] != 0:
-                driver.find_element("xpath", "//*[@id=\"pt\"]").send_keys(self.props["preis"][1])
-            driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[2]/div[1]/div/div/div[3]/button").click()
-            ###Zimmer
-            if self.props["zimmer"]!= [0,0]:
-                driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[2]/div[2]/div/span").click()
-                if self.props["zimmer"][0]!= 0 and self.props["zimmer"][0]<9:
-                    driver.find_element("xpath", f"//*[@id=\"rf\"]/option[{self.props['zimmer'][0]}]").click()
-                elif self.props["zimmer"][0]!= 0:
-                    driver.find_element("xpath", f"//*[@id=\"rf\"]/option[8]").click()
-                    print(f"Auf Seite {s} ist die maximale Anzahl an Zimmern 8.")
-                #max
-                if self.props["zimmer"][0]!= 0 and self.props["zimmer"][0]<9:
-                    driver.find_element("xpath", f"//*[@id=\"rt\"]/option[{self.props['zimmer'][1]}]").click()
-                driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[2]/div[2]/div/div/div[3]/button")
-            ###Qm
-            driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[2]/div[3]/div/span").click()
-            if self.props["qm"][1] != 0:
-                driver.find_element("xpath", "//*[@id=\"sf\"]").send_keys(self.props["qm"][0])
-            if self.props["qm"][1] != 0:
-                driver.find_element("xpath", "//*[@id=\"st\"]").send_keys(self.props["qm"][1])
-            driver.find_element("xpath", "//*[@id=\"modal-extra-filters\"]/form/div[1]/div/div[2]/div[2]/div[3]/div/div/div[3]/button").click()
-
-        if s == "www.wohnungsboerse.net":
-            driver.get("https://www.wohnungsboerse.net")
-            driver.execute_script('document.querySelector("#usercentrics-root").shadowRoot.querySelector("div").querySelector("div").querySelector("div").querySelector("div").querySelectorAll("div")[1].querySelector("div > .sc-gWXbKe > div > div > div").querySelectorAll("button")[1].click()')
-
-        if s == "immobilienmarkt.faz.net":
-            print("not implemented yet")
 
     @staticmethod
     def extract_data(s, driver, typ) -> dict:
@@ -451,7 +295,7 @@ class Search:
             links = []
             if s=="www.immowelt.de":
                 for j in range(16):
-                    links += self.get_links(s, j, driver, typ)
+                    links += self.get_links(j, driver, typ)
                     __time = self.props["time"]
                     os.mkdir(f"/Users/a2/.cache/immodynamics/{__time}")
                     with open(f"/Users/a2/.cache/immodynamics/{__time}/links{j}.json", "w") as f:
