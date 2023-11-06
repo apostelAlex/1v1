@@ -1,4 +1,5 @@
 import json
+from config import *
 from bs4 import BeautifulSoup
 import requests
 from selenium.webdriver.chrome.service import Service
@@ -10,7 +11,6 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.safari.options import Options
 import os
-import ipywidgets as widgets
 import time
 #if >1 types of search are selected, multiple instances of search props are generated and plotted in different figures.
 #PLZ get coordinates / check if valid
@@ -66,14 +66,14 @@ class Decoder:
     @staticmethod
     def first_seen(id):
         try:
-            dirs = os.listdir(f"/Users/a2/Desktop/immo_cache/{id}")
+            dirs = os.listdir(f"{CACHE_ROOT}/{id}")
         except FileNotFoundError:
             return None
         else:
             dirs.sort()
             #catch wrong files
             for i in dirs:
-                if os.path.isdir(f"/Users/a2/Desktop/immo_cache/{id}/{i}"):
+                if os.path.isdir(f"{CACHE_ROOT}/{id}/{i}"):
                     return i
     @staticmethod
     def decode_searchpage_immowelt(page_source):
@@ -116,9 +116,8 @@ class Search:
     def __init__(self, props, typ): #input : dict of
         self.props = props
         self.links_arr = []
-        #self.service = Service(executable_path="/Users/a2/Desktop/Projects/Financials/chromedriver")
-        #driver = webdriver.Chrome(service=self.service)
-        driver = webdriver.Safari()
+        driver = webdriver.Chrome()
+
         #options = webdriver.ChromeOptions()
         #options.add_argument("user-data-dir=/Users/a2/Library/Application Support/Google/Chrome")
         #driver.refresh()
@@ -196,9 +195,14 @@ class Search:
                 driver.find_element("xpath", "//*[@id=\"divSearchWhatFlyout\"]/div[2]/ul/li[7]/label/input").click()
 
         driver.find_element(By.XPATH, "//*[@id=\"tbLocationInput\"]").send_keys(Search.decode_bundesland(i)) #location
-        driver.find_element(By.TAG_NAME, "body").send_keys(Keys.RETURN)
+        # time.sleep(1)
+        # driver.find_element(By.TAG_NAME, "body").send_keys(Keys.RETURN)
         # driver.find_element(By.XPATH, "//*[@id=\"btnSearchSubmit\"]").click() #search # maybe return enough?
-
+        try:
+            driver.find_element(By.XPATH, "//*[@id='btnSearchSubmit']").click()
+        except Exception as E:
+            raise E
+        
         def get_pages():
             try:
                 wrapper = driver.find_element(By.CLASS_NAME, "Pagination-190de")
@@ -247,15 +251,15 @@ class Search:
 
     def export_links(self, data): #every search logged with monotonic time
         _time = self.props["time"]
-        os.system(f"cd /Users/a2/Desktop/immo_cache && mkdir {_time} && cd {_time} && touch links.json")
-        with open(f"/Users/a2/Desktop/immo_cache/{_time}/links.json", "w") as f:
+        os.system(f"cd {CACHE_ROOT} && mkdir {_time} && cd {_time} && touch links.json")
+        with open(f"{CACHE_ROOT}/{_time}/links.json", "w") as f:
             json.dump(data,f)
         return _time
 
     @staticmethod
     def export_immo(propys, _time):
-        os.system(f"cd /Users/a2/Desktop/immo_cache/{_time} && touch properties.json")
-        with open(f"/Users/a2/Desktop/immo_cache/{_time}/properties.json", "w") as f:
+        os.system(f"cd {CACHE_ROOT}/{_time} && touch properties.json")
+        with open(f"{CACHE_ROOT}/{_time}/properties.json", "w") as f:
             f.write(str(propys))
         return propys["id"]
 
@@ -280,13 +284,13 @@ class Search:
                 driver.find_element(By.TAG_NAME, "body").send_keys(Keys.CONTROL + 't')
                 driver.get(u)
                 time.sleep(10)
-                os.system(f"touch /Users/a2/Desktop/immo_cache/{id}/{time}/{i}.png")
-                with open(f"touch /Users/a2/Desktop/immo_cache/{id}/{time}/{i}.png", "wb") as f:
+                os.system(f"touch {CACHE_ROOT}/{id}/{time}/{i}.png")
+                with open(f"touch {CACHE_ROOT}/{id}/{time}/{i}.png", "wb") as f:
                     f.write(driver.find_element(By.XPATH, "/html/body/img").screenshot_as_png)
 
     @staticmethod
     def export_times(times: list):
-        with open(f"/Users/a2/.cache/immodynamics/{times[0]}.json", "w") as f:
+        with open(f"{CACHE_ROOT}/{times[0]}.json", "w") as f:
             json.dump(times, f)
 
     def handler(self, driver, typ):
@@ -297,8 +301,8 @@ class Search:
                 for j in range(16):
                     links += self.get_links(j, driver, typ)
                     __time = self.props["time"]
-                    os.mkdir(f"/Users/a2/.cache/immodynamics/{__time}")
-                    with open(f"/Users/a2/.cache/immodynamics/{__time}/links{j}.json", "w") as f:
+                    os.mkdir(f"{CACHE_ROOT}/{__time}")
+                    with open(f"{CACHE_ROOT}/{__time}/links{j}.json", "w") as f:
                         f.write("\n".join(links))
             _time = self.export_links(links)
             print(_time)
